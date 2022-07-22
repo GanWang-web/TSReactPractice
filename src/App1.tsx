@@ -66,94 +66,113 @@ const StoreScore:StoreArr[]=[
   {Store: 'Overall score', Score: '60%', positive: true, Change:'12%', ScoredResponse: '123'},
   {Store: 'Overall score', Score: '60%', positive: true, Change:'12%', ScoredResponse: '2,135'},
 ]
-
+const widthOfXSM = '6'
+const widthOfMDAndSM = '3'
 
 const App:React.FC=()=>{
-  let container = useRef<HTMLDivElement>(null)
-  let containerWrapper = useRef<HTMLDivElement>(null)
-
+  const [move,setMove]=useState('')
+  const [rightVisible,setrightVisible]=useState(false)
+  const [leftVisible,setleftVisible]=useState(false)
   const [startPos,setStartPos] = useState(0)
   const [endPos,setEndPos] = useState(0)
+  let [times,setTimes] = useState(0)
+  let container = useRef<HTMLDivElement>(null)
+  const containerWrapper = useRef<HTMLDivElement>(null)
+  const [containerSize,setContainerSize] = useState(0)
+  const [screens,setScreens] = useState(0)
+  const [screenSize,setScreenSize] = useState('')
   const [cols,setCols] = useState(0)
-  const [rows,setRows] = useState(0)
-  const [singleColWidth,setSingleColWidth] = useState(0)
-  const [currentLeft,setCurrentLeft] = useState(0)
-  const [rightSlidable,setRightSlidable] = useState(true)
-  const [leftSlidable,setLeftSlidable] = useState(false)
 
   const windowWidth = useWindowWidth()
 
+  const handleDebounce = useCallback(
+    throttle((newTimes)=>{setTimes(newTimes)},1000)
+  ,[])
 
-  const determineSwipeDirection=(direction:string)=>{
-    if(direction === 'right' && (singleColWidth *cols-singleColWidth)!==currentLeft &&containerWrapper.current ){
-        setCurrentLeft(currentLeft+singleColWidth)
-        console.log('single',singleColWidth)
-        console.log('currentLeft',currentLeft)
-    } else if( direction === 'left'&&currentLeft!==0 &&containerWrapper.current){
-        setCurrentLeft(currentLeft-singleColWidth)
+  function determineSwipeDirection(direction:string){
+    
+    times<=0?setleftVisible(false):setleftVisible(true)
+    if(rightVisible && direction === 'right'){
+      handleDebounce(times+1)
+    } else if(leftVisible===true && direction === 'left'){
+      handleDebounce(times-1)
     }
   }
 
   useEffect(()=>{
-    if(containerWrapper.current){
-      containerWrapper.current.style.right = `${currentLeft}px`
-      containerWrapper.current.style.transition = `all 1s linear`
-      console.log('需要移动：',currentLeft)
+    const num = Number((screenSize==='XSM'?widthOfXSM:widthOfMDAndSM).split("/")[0])*times+'/12'
+    setMove(`transform -translate-x-${num}`)
+    // eslint-disable-next-line
+  },[times])
 
-    }
-  },[currentLeft])
-
-  // useEffect(()=>{
-  //   let totalWidth=0
-  //   if(containerWrapper.current){
-  //     // const singleWidth = Math.ceil(containerWrapper.current.clientWidth/(screenSize==='MD'?3:(screenSize==='SM'?2:1)))
-  //     // totalWidth = (singleWidth *cols)
-  //     // setSingleColWidth(Math.ceil(singleWidth))
-  //     // console.log('单个col的宽度',singleWidth)
-
-  //     if(container.current){
-  //       console.log(container.current.style.width)
-  //       container.current.style.width = `${totalWidth}px`
-  //       console.log(container.current.style.width)
-  //     }
-  //   }
-  // // eslint-disable-next-line
-  // },[windowWidth,cols])
-
-
-  useEffect(()=>{
-    
-    const width = windowWidth>768?'MD':(windowWidth>640?'SM':'XSM')
-    let cols = 0
-      switch (width) {
+  const calSlides=()=>{
+      let cols = 0, slides = 0
+      switch (screenSize) {
         case 'MD':
-          cols = Math.ceil((objlist.length-1)/2)+1
-          setRows(2)
+          cols = Math.ceil((objlist.length-5)/2)
+          cols<=3?slides = 0:slides = Math.ceil(cols/3)
           break
         case 'SM':
-          cols = Math.ceil((objlist.length)/3)
-          setRows(3)
+          cols = Math.ceil((objlist.length-6)/3)
+          cols<=2?slides = 0:slides = Math.ceil(cols/2)
           break
         case 'XSM':
-          cols = Math.ceil((objlist.length-2)/3)+1
-          setRows(3)
+          cols = Math.ceil((objlist.length-2)/3)
+          cols<=2?slides = 0:slides = cols
       }
-    console.log('cols数量',cols)
+    console.log('slides数量',slides)
+    setScreens(slides)
     setCols(cols)
-    if(containerWrapper.current){
-      containerWrapper.current.style.right='0px'
-      const singleWidth = Math.ceil(containerWrapper.current.clientWidth/(width==='MD'?3:(width==='SM'?2:1.5)))
-      const totalWidth = (singleWidth *cols)
-      setSingleColWidth(Math.ceil(singleWidth))
-      if(container.current){
-        console.log(container.current.style.width)
-        container.current.style.width = `${totalWidth}px`
-        console.log(container.current.style.width)
-        setCurrentLeft(0)
-      }
-    }
-  // eslint-disable-next-line
-  },[windowWidth])
+  }
+
+  useEffect(()=>{
+    // // window.addEventListener does not fetch size at the start.
+    // window.addEventListener('resize',()=>{
+    //   // setWidth(container.current.offsetWidth)
+    //   console.log(container.scrollWidth < container.clientWidth)
+    // })
+    // ResizeObserver监视单个元素的resize，并且不会像useWindowWidth hooke一样不停的监视
+    // const myObserver = new ResizeObserver(entries=>{
+    //   entries.forEach(entry=>{
+    //     setContainerSize(entry.contentRect.width)
+    //     // console.log(entry.contentRect.width)
+    //   })
+    // })
+    // myObserver.observe(container)
+    // return ()=>{
+    //   myObserver.disconnect();
+    // }
+    // console.log("________________")
+    // console.log(container.clientWidth)
+    // // console.log(container.clientLeft)
+    // console.log(container.scrollWidth)
+    // console.log(container.scrollLeft)
+    // console.log(container.offsetWidth)
+    // console.log(container.offsetLeft)
+    // console.log(container.getBoundingClientRect().left)
+    // console.log("________________")
+    windowWidth>750?setScreenSize('MD'):(windowWidth>622?setScreenSize('SM'):setScreenSize('XSM'))
+    calSlides()
+    let container = document.querySelector("#container") as HTMLElement
+    setContainerSize(container.offsetWidth)
+
+
+    times <= 0?setleftVisible(false):setleftVisible(true)
+    screens > times?setrightVisible(true):setrightVisible(false)
+
+    // eslint-disable-next-line
+  },[times,windowWidth,containerSize,screens])
+
+  const displayColums = 3
+// calculate the column width
+// useEffect(()=>{
+//   if(windowWidth>768){
+//     const containerWrapperWidth = containerWrapper.current?.clientWidth;
+//     const columns
+
+//   }
+// },[windowWidth])
+
 
 
   const infoIcon=()=>{
@@ -177,18 +196,15 @@ const App:React.FC=()=>{
       <div className="ml-72 mt-36 mr-10 pb-2 bg-gray-100">
         <div className="flex flex-col bg-white h-auto">
 
+          {/* <Example2/> */}
 
 
 
-
-
-
-        <div className="relative w-full overflow-hidden">
-          <div className={`${currentLeft===0?'invisible':'visible'} z-40 relative float-left top-48 `} onClick={()=>determineSwipeDirection('left')}>
-            <LeftOutlined />
-          </div>
-          <div className={`relative w-full`} ref={containerWrapper}>
-            <div className={`grid grid-flow-col grid-cols-${cols} grid-rows-${rows} h-96`}
+          <div className="w-full p-5 overflow-hidden" ref={containerWrapper}>
+            <div className={`flex ${leftVisible?'visible':'invisible'} z-40 justify-start absolute left-72`} onClick={()=>determineSwipeDirection('left')}>
+              <LeftOutlined />
+            </div>
+            <div className={`grid grid-flow-col grid-cols-${cols}`}
             id="container"
             ref={container}
             onTouchStart={(e)=>{setStartPos(e.touches[0].clientX)}}
@@ -198,18 +214,13 @@ const App:React.FC=()=>{
                 if(dis===0){return} else {dis>0?determineSwipeDirection('right'):determineSwipeDirection('left')}
               }}>
               {
-                objlist.map(({name, value, positive, growth, response},index)=><FiveCards 
-                  index={index} key={index} name={name} positive={positive} value={value} growth={growth} response={response} 
-                />)
+                objlist.map(({name, value, positive, growth, response},index)=><FiveCards index={index} key={index} name={name} positive={positive} value={value} growth={growth} response={response} />)
               }
             </div>
+            <div className={`flex ${rightVisible?'visible':'invisible'} z-40 justify-end absolute right-10`} onClick={()=>determineSwipeDirection('right')}>
+              <RightOutlined />
+            </div>
           </div>
-          <div className={`${(singleColWidth *cols-singleColWidth)===currentLeft?'invisible':'visible'} z-40 relative float-right bottom-52`}
-              onClick={()=>determineSwipeDirection('right')}>
-            <RightOutlined />
-          </div>
-        </div>
-        
 
 
 
@@ -220,7 +231,6 @@ const App:React.FC=()=>{
           <Chart objlist={objlist} />
         </div>
         <div className="bg-white rounded-3xl m-4">
-
           <List StoreScore={StoreScore} />
         </div>
       </div>

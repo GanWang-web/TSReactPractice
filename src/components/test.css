@@ -1,0 +1,17 @@
+#scrollEle {
+  overflow-x: scroll;
+  overflow-y: scroll
+}
+
+#scrollEle::-webkit-scrollbar {
+  height: 8px;
+}
+#scrollEle::-webkit-scrollbar-thumb
+{
+  border-radius: 2px;
+  background: -webkit-linear-gradient(270deg, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0) 100%);
+}
+#scrollEle::-webkit-scrollbar-track
+{
+  background-color: white;
+}
